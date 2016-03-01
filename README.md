@@ -1,5 +1,7 @@
 # Projeto de Tradução: Riviera---The-Promised-Land-U-Trashman-
 
+# www.lucjedi.com
+
 Developer(s): Sting Entertainment
 
 Publisher(s): JP Sting Entertainment
