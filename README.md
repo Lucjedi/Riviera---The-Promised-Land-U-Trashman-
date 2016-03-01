@@ -1,6 +1,7 @@
 # Projeto de Tradução: Riviera---The-Promised-Land-U-Trashman-
 
 Developer(s):
+
 Sting Entertainment
 
 Publisher(s):
