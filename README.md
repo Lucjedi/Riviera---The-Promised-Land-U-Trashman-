@@ -1,23 +1,16 @@
 # Projeto de Tradução: Riviera---The-Promised-Land-U-Trashman-
 
-Developer(s):
+Developer(s): Sting Entertainment
 
-Sting Entertainment
-
-Publisher(s):
-JP Sting Entertainment
+Publisher(s): JP Sting Entertainment
 NA Atlus
 EU 505 Games
 
-Platform(s):
-Game Boy Advance
+Platform(s): Game Boy Advance
 
-Release date(s):
-JP November 25, 2004
+Release date(s): JP November 25, 2004
 NA June 28, 2005
 
-Genre(s):
-Role-playing video game
+Genre(s): Role-playing video game
 
-Mode(s):
-Single player
+Mode(s): Single player
