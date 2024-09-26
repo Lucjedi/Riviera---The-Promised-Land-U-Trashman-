@@ -1,3 +1,9 @@
+### DUMP textos para Riviera: The Promised Land
+### PSP
+### v.0.1
+### www.lucjedi.com
+
+
 import csv
 import binascii
 import os
