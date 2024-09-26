@@ -125,7 +125,8 @@ for indice_hex in dicinarioPonteiros:
              try:
                 textosConcatenados += dicinarioCaracter[hexCapturadoTexto]
              except:
-                textosConcatenados += '<' + hexCapturadoTexto + '>'    
+                textosConcatenados += '<' + hexCapturadoTexto + '>'
+    gravandoArquivoDump.write(str('\n'))
 
 # Fechar arquivos manualmente
 cstringAberto.close()
