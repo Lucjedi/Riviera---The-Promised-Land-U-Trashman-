@@ -2,6 +2,7 @@
 ### PSP
 ### v.0.1
 ### www.lucjedi.com
+### Python 3.11
 
 
 import csv
