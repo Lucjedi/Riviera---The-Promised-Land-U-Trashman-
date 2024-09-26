@@ -2,17 +2,34 @@
 
 # www.lucjedi.com
 
-Developer(s): Sting Entertainment
+Developer(s)
+Sting Entertainment
 
-Publisher(s): JP Sting Entertainment
-NA Atlus
-EU 505 Games
+Publisher(s)
+JP: Sting Entertainment
+NA: Atlus
+EU: 505 Games
+AU: 505 Games
 
-Platform(s): Game Boy Advance
+Designer(s)
+Shinichi Ito (Game Design), Sunaho Tobe (Character Design) (GBA and PSP versions)
 
-Release date(s): JP November 25, 2004
-NA June 28, 2005
+Series
+Dept. Heaven
 
-Genre(s): Role-playing video game
+Platform(s)
+PlayStation Portable
 
-Mode(s): Single player
+Release
+PlayStation Portable
+JP: November 22, 2006
+NA: July 10, 2007
+JP: October 18, 2007 (Special Edition)
+EU: April 4, 2008
+AU: May 8, 2008
+
+Genre(s)
+Role-playing
+
+Mode(s)
+Single player
