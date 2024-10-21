@@ -1,6 +1,7 @@
 ### DUMP textos para Riviera: The Promised Land
 ### PSP
 ### v.0.1
+### v.0.2 Adicionado ; no inicio e fim de valores hex para tradução por tabela google spreadsheets.
 ### www.lucjedi.com
 ### Python 3.11
 
