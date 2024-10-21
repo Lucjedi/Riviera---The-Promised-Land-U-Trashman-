@@ -97,36 +97,56 @@ while True:
 for indice_hex in dicinarioPonteiros:
     indice_decimal = int(indice_hex, 16)
     posicaoTextoDec = indice_decimal + posicaoTextoInicialDec
-    ##gravandoArquivoDump.write(indice_hex + '/' + str(indice_decimal) + '/' + str(posicaoTextoDec) + ':' + str(dicinarioPonteiros[indice_hex]) + '\n')
     gravandoArquivoDump.write(str(dicinarioPonteiros[indice_hex]) + '\n')
     cstringAberto.seek(posicaoTextoDec)
 
     textosConcatenados = ''
+    flagTexto = False
+    flagHex = False
+
     while True:
-       hexCapturadoTexto = cstringAberto.read(1)
-       hexCapturadoTexto = str(binascii.hexlify(hexCapturadoTexto))
-       hexCapturadoTexto = hexCapturadoTexto[2:4]
-       if hexCapturadoTexto == 'ff':
-          gravandoArquivoDump.write(str(textosConcatenados))
-          gravandoArquivoDump.write(str('\n'))
-          break
-       else:
-          cstringAberto.seek(cstringAberto.tell()-1)
-          hexCapturadoTexto = cstringAberto.read(2)
-          hexCapturadoTexto = str(binascii.hexlify(hexCapturadoTexto))
-          hexCapturadoTexto = hexCapturadoTexto[2:6]
-          try:
-             textosConcatenados += dicinarioCaracter[hexCapturadoTexto]
-          except:
-             cstringAberto.seek(cstringAberto.tell()-2)
-             hexCapturadoTexto = cstringAberto.read(1)
-             hexCapturadoTexto = str(binascii.hexlify(hexCapturadoTexto))
-             hexCapturadoTexto = hexCapturadoTexto[2:4]
-             try:
-                textosConcatenados += dicinarioCaracter[hexCapturadoTexto]
-             except:
-                textosConcatenados += '<' + hexCapturadoTexto + '>'
-    gravandoArquivoDump.write(str('\n'))
+
+        #textosConcatenados = textosConcatenados[:-1] + ';' + textosConcatenados[-1]
+
+        hexCapturadoTexto = cstringAberto.read(1)
+        hexCapturadoTexto = str(binascii.hexlify(hexCapturadoTexto))
+        hexCapturadoTexto = hexCapturadoTexto[2:4]
+
+        if hexCapturadoTexto == 'ff':
+            gravandoArquivoDump.write(str(textosConcatenados))
+            gravandoArquivoDump.write(str('\n'))
+            break
+        else:
+            cstringAberto.seek(cstringAberto.tell()-1)
+            hexCapturadoTexto = cstringAberto.read(2)
+            hexCapturadoTexto = str(binascii.hexlify(hexCapturadoTexto))
+            hexCapturadoTexto = hexCapturadoTexto[2:6]
+            try:
+                if flagTexto == True:
+                    textosConcatenados += ';' + dicinarioCaracter[hexCapturadoTexto]
+                else:
+                    textosConcatenados += dicinarioCaracter[hexCapturadoTexto]
+                flagTexto = False
+                flagHex = True
+            except:
+                cstringAberto.seek(cstringAberto.tell()-2)
+                hexCapturadoTexto = cstringAberto.read(1)
+                hexCapturadoTexto = str(binascii.hexlify(hexCapturadoTexto))
+                hexCapturadoTexto = hexCapturadoTexto[2:4]
+                try:
+                    if flagTexto == True:
+                        textosConcatenados += ';' + dicinarioCaracter[hexCapturadoTexto]
+                    else:
+                        textosConcatenados += dicinarioCaracter[hexCapturadoTexto]
+                    flagTexto = False
+                    flagHex = True
+                except:
+                    if flagHex == True:
+                        textosConcatenados += ';' + '<' + hexCapturadoTexto + '>'
+                    else:
+                        textosConcatenados += '<' + hexCapturadoTexto + '>'
+                    flagHex = False
+                    flagTexto = True
 
 # Fechar arquivos manualmente
 cstringAberto.close()
