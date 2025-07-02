@@ -1,10 +1,8 @@
 ### DUMP textos para Riviera: The Promised Land
 ### PSP
-### v.0.1 Projeto novo.
-### v.0.2 Adicionado ; no inicio e fim de valores hex para tradução por tabela google spreadsheets.
+### v.0.1
 ### www.lucjedi.com
-### Python 3.11
-
+### Python 3.11.1
 
 import csv
 import binascii
