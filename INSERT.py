@@ -21,7 +21,7 @@ def abrir_arquivo(titulo, arquivo_inicial, tipo):
     return arquivo
 
 arquivo_tradu = abrir_arquivo("Selecione o arquivo Tradu.tsv", "Tradu.tsv", ("Arquivos TSV", "*.tsv"))
-arquivo_uscstring = abrir_arquivo("Selecione o arquivo usCstring.bin", "usCstring.bin", ("Arquivos BIN", "*.bin"))
+arquivo_uscstring = abrir_arquivo("Selecione o arquivo ORIGINAL usCstring.bin", "usCstring.bin", ("Arquivos BIN", "*.bin"))
 
 diretorio_arquivo = os.path.dirname(arquivo_tradu)
 
@@ -34,9 +34,27 @@ with open(dicionario_txt_path, 'r', encoding='latin1') as dict_file:
 
 chaves_ordenadas = sorted(dicionario.keys(), key=lambda x: -len(x))
 
-nome_base = os.path.splitext(os.path.basename(arquivo_tradu))[0]
-insert_bin_path = os.path.join(diretorio_arquivo, f"{nome_base}_insert.bin")
-print(f"Arquivo Insert será criado em: {insert_bin_path}")
+###nome_base = os.path.splitext(os.path.basename(arquivo_tradu))[0]
+###insert_bin_path = os.path.join(diretorio_arquivo, f"{nome_base}_insert.bin")
+###print(f"Arquivo Insert será criado em: {insert_bin_path}")
+
+def salvar_como(titulo, nome_sugerido, tipo):
+    root = tk.Tk()
+    root.withdraw()
+    caminho = filedialog.asksaveasfilename(
+        title=titulo,
+        initialfile=nome_sugerido,
+        defaultextension=".bin",
+        filetypes=[tipo]
+    )
+    if not caminho:
+        print("Nenhum arquivo de saída foi selecionado. Encerrando.")
+        sys.exit(1)
+    print(f"Arquivo de saída selecionado: {caminho}")
+    return caminho
+
+insert_bin_path = salvar_como("Salvar arquivo Traduzido Insert.bin como...", "Insert.bin", ("Arquivos BIN", "*.bin"))
+
 
 byte_offset = 0
 dict_posicoes = {}
@@ -115,8 +133,6 @@ with open(insert_bin_path, 'wb') as destino:
 
                 byte_offset += tamanho_em_bytes_do_texto
 
-print("FIM")
-
 #print("\nDicionário posições -> offset (hex little-endian):")
 #for pos in sorted(dict_posicoes.keys()):
 #    offset_hex_str = dict_posicoes[pos].hex()
@@ -125,12 +141,12 @@ print("FIM")
 # Salvar dicionário em arquivo temporário para conferência
 validar_path = os.path.join(diretorio_arquivo, 'validar_offset.txt')
 
-with open(validar_path, 'w', encoding='utf-8') as f:
-    for pos in sorted(dict_posicoes.keys()):
-        offset_hex_str = dict_posicoes[pos].hex()
-        f.write(f"{pos}: {offset_hex_str}\n")
-
-print(f"\nDicionário de offsets salvo em: {validar_path}")
+###with open(validar_path, 'w', encoding='utf-8') as f:
+###    for pos in sorted(dict_posicoes.keys()):
+###        offset_hex_str = dict_posicoes[pos].hex()
+###        f.write(f"{pos}: {offset_hex_str}\n")
+###
+###print(f"\nDicionário de offsets salvo em: {validar_path}")
 
 with open(insert_bin_path, 'r+b') as f:
     for posicao, offset_bytes in dict_posicoes.items():
@@ -149,3 +165,5 @@ with open(insert_bin_path, 'r+b') as f:
     f.write(total_texto_bytes_le)
 
 print(f"Total de {total_texto_bytes} bytes de texto inseridos. Valor gravado na posição 4 de {insert_bin_path}.")
+
+print("FIM DO PROCESSO")
