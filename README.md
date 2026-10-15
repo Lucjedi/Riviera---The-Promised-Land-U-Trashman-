@@ -1,3 +1,7 @@
+Use: .\riviera_gui.py
+Python 3
+
+
 # Projeto de Tradução:
 Riviera: The Promised Land
 
