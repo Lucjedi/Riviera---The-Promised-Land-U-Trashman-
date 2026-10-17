@@ -1,4 +1,5 @@
 import os
+import webbrowser
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -14,6 +15,8 @@ ENGLISH = {
     "file": "File",
     "tools": "Tools",
     "language": "Language",
+    "about": "About",
+    "about_title": "About Riviera",
     "dictionary": "Open dictionary",
     "open_bin": "Open BIN",
     "open_json": "Open JSON project",
@@ -74,6 +77,11 @@ ENGLISH = {
     "abs": "abs",
     "bytes": "bytes",
     "tags": "tags",
+    "name": "Name",
+    "creator": "Creator",
+    "website": "Website",
+    "github": "GitHub",
+    "close": "Close",
 }
 
 SPANISH = {
@@ -82,6 +90,8 @@ SPANISH = {
     "file": "Archivo",
     "tools": "Herramientas",
     "language": "Idioma",
+    "about": "Acerca de",
+    "about_title": "Acerca de Riviera",
     "dictionary": "Abrir diccionario",
     "open_bin": "Abrir BIN",
     "open_json": "Abrir proyecto JSON",
@@ -138,6 +148,11 @@ SPANISH = {
     ),
     "separator": "──────── ⚙ comandos preservados aquí ────────",
     "save_before_exit": "¿Guardar el proyecto antes de salir?",
+    "name": "Nombre",
+    "creator": "Creador",
+    "website": "Página",
+    "github": "GitHub",
+    "close": "Cerrar",
 }
 
 FRENCH = {
@@ -146,6 +161,8 @@ FRENCH = {
     "file": "Fichier",
     "tools": "Outils",
     "language": "Langue",
+    "about": "À propos",
+    "about_title": "À propos de Riviera",
     "dictionary": "Ouvrir le dictionnaire",
     "open_bin": "Ouvrir le BIN",
     "open_json": "Ouvrir le projet JSON",
@@ -203,6 +220,11 @@ FRENCH = {
     "separator": "──────── ⚙ commandes préservées ici ────────",
     "save_before_exit": "Enregistrer le projet avant de quitter ?",
     "bytes": "octets",
+    "name": "Nom",
+    "creator": "Créateur",
+    "website": "Page",
+    "github": "GitHub",
+    "close": "Fermer",
 }
 
 PORTUGUESE = {
@@ -211,6 +233,8 @@ PORTUGUESE = {
     "file": "Arquivo",
     "tools": "Ferramentas",
     "language": "Idioma",
+    "about": "Sobre",
+    "about_title": "Sobre o Riviera",
     "dictionary": "Abrir dicionário",
     "open_bin": "Abrir BIN",
     "open_json": "Abrir projeto JSON",
@@ -267,6 +291,11 @@ PORTUGUESE = {
     ),
     "separator": "──────── ⚙ comandos preservados aqui ────────",
     "save_before_exit": "Deseja salvar o projeto antes de sair?",
+    "name": "Nome",
+    "creator": "Criador",
+    "website": "Página",
+    "github": "GitHub",
+    "close": "Fechar",
 }
 
 LANGUAGES = {
@@ -297,6 +326,9 @@ class RivieraEditor(tk.Tk):
         self.show_hidden_bytes = tk.BooleanVar(value=False)
         self.search_var = tk.StringVar()
         self.hidden_summary_var = tk.StringVar()
+        self.about_window = None
+        self.about_fields = {}
+        self.about_close_button = None
 
         self._create_menu()
         self._create_widgets()
@@ -334,6 +366,7 @@ class RivieraEditor(tk.Tk):
         self._refresh_tree()
         self._update_hidden_summary()
         self._update_hidden_bytes()
+        self._update_about_texts()
 
         self.title(self.tr("title"))
 
@@ -356,12 +389,17 @@ class RivieraEditor(tk.Tk):
             self.menu_bar,
             tearoff=False,
         )
+        self.about_menu = tk.Menu(
+            self.menu_bar,
+            tearoff=False,
+        )
 
         # Guardamos os índices. Não usamos self.menu_bar.index(menu),
         # pois o Tkinter não aceita o objeto Menu como índice.
         self.file_menu_index = 0
         self.tools_menu_index = 1
         self.language_menu_index = 2
+        self.about_menu_index = 3
 
         self.menu_bar.add_cascade(
             label=self.tr("file"),
@@ -375,6 +413,10 @@ class RivieraEditor(tk.Tk):
             label=self.tr("language"),
             menu=self.language_menu,
         )
+        self.menu_bar.add_cascade(
+            label=self.tr("about"),
+            menu=self.about_menu,
+        )
 
         self.config(menu=self.menu_bar)
         self._rebuild_menus()
@@ -383,6 +425,7 @@ class RivieraEditor(tk.Tk):
         self.file_menu.delete(0, tk.END)
         self.tools_menu.delete(0, tk.END)
         self.language_menu.delete(0, tk.END)
+        self.about_menu.delete(0, tk.END)
 
         # Atualiza os nomes File/Tools/Language.
         self.menu_bar.entryconfigure(
@@ -396,6 +439,10 @@ class RivieraEditor(tk.Tk):
         self.menu_bar.entryconfigure(
             self.language_menu_index,
             label=self.tr("language"),
+        )
+        self.menu_bar.entryconfigure(
+            self.about_menu_index,
+            label=self.tr("about"),
         )
 
         # Arquivo
@@ -472,6 +519,11 @@ class RivieraEditor(tk.Tk):
                     self.change_language(value)
                 ),
             )
+
+        self.about_menu.add_command(
+            label=self.tr("about"),
+            command=self.show_about_window,
+        )
 
     # ==============================================================
     # Interface
@@ -882,6 +934,140 @@ class RivieraEditor(tk.Tk):
             "<Control-Return>",
             lambda event: self.export_bin(),
         )
+
+    def show_about_window(self):
+        if (
+            self.about_window
+            and self.about_window.winfo_exists()
+        ):
+            self._update_about_texts()
+            self.about_window.deiconify()
+            self.about_window.lift()
+            self.about_window.focus_force()
+            return
+
+        self.about_window = tk.Toplevel(self)
+        self.about_window.resizable(False, False)
+        self.about_window.transient(self)
+        self.about_window.grab_set()
+        self.about_window.protocol(
+            "WM_DELETE_WINDOW",
+            self._close_about_window,
+        )
+        self.about_window.bind(
+            "<Escape>",
+            self._close_about_window,
+        )
+
+        frame = ttk.Frame(
+            self.about_window,
+            padding=12,
+        )
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        rows = [
+            ("name", "Riviera - Text Editor", None),
+            ("creator", "Lucjedi", None),
+            ("website", "www.lucjedi.com", "https://www.lucjedi.com"),
+            (
+                "github",
+                "https://github.com/lucjedi",
+                "https://github.com/lucjedi",
+            ),
+        ]
+
+        self.about_fields = {}
+        for row, (key, value, link) in enumerate(rows):
+            label = ttk.Label(frame)
+            label.grid(
+                row=row,
+                column=0,
+                sticky=tk.W,
+                padx=(0, 8),
+                pady=2,
+            )
+
+            if link:
+                value_label = tk.Label(
+                    frame,
+                    text=value,
+                    fg="#1a73e8",
+                    cursor="hand2",
+                )
+                value_label.bind(
+                    "<Button-1>",
+                    lambda event, url=link: (
+                        self._open_about_link(url)
+                    ),
+                )
+            else:
+                value_label = ttk.Label(
+                    frame,
+                    text=value,
+                )
+
+            value_label.grid(
+                row=row,
+                column=1,
+                sticky=tk.W,
+                pady=2,
+            )
+            self.about_fields[key] = (label, value_label)
+
+        self.about_close_button = ttk.Button(
+            frame,
+            command=self._close_about_window,
+        )
+        self.about_close_button.grid(
+            row=len(rows),
+            column=0,
+            columnspan=2,
+            sticky=tk.E,
+            pady=(10, 0),
+        )
+
+        self._update_about_texts()
+        self.about_window.focus_set()
+
+    def _open_about_link(self, url):
+        webbrowser.open(url)
+
+    def _close_about_window(self, event=None):
+        if (
+            self.about_window
+            and self.about_window.winfo_exists()
+        ):
+            try:
+                self.about_window.grab_release()
+            except tk.TclError:
+                pass
+            self.about_window.destroy()
+
+        self.about_window = None
+        self.about_fields = {}
+        self.about_close_button = None
+
+        if event is not None:
+            return "break"
+
+        return None
+
+    def _update_about_texts(self):
+        if not (
+            self.about_window
+            and self.about_window.winfo_exists()
+        ):
+            return
+
+        self.about_window.title(self.tr("about_title"))
+
+        for key, (label, _) in self.about_fields.items():
+            label.configure(text=f"{self.tr(key)}:")
+
+        if self.about_close_button:
+            self.about_close_button.configure(
+                text=self.tr("close")
+            )
 
     # ==============================================================
     # Arquivos
