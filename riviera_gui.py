@@ -1,19 +1,28 @@
 import os
 import tkinter as tk
+import webbrowser
 from tkinter import filedialog, messagebox, ttk
 
 from riviera_core import BuildError, Project, Table
 
 
-# ==============================================================
-# Traduções da interface
-# ==============================================================
-
-ENGLISH = {
-    "title": "Riviera - Text Editor",
+BASE_LANGUAGE = {
+    "title": "Riviera: The Promised Land - PSP - Text Editor",
     "file": "File",
     "tools": "Tools",
     "language": "Language",
+    "about": "About",
+    "about_title": "About Riviera",
+    "about_name": (
+        "Riviera: The Promised Land\n"
+        "PSP\n\n"
+        "Text Editor"
+    ),
+    "creator": "Creator",
+    "website": "Website",
+    "github": "GitHub",
+    "close": "Close",
+
     "dictionary": "Open dictionary",
     "open_bin": "Open BIN",
     "open_json": "Open JSON project",
@@ -23,11 +32,13 @@ ENGLISH = {
     "export_dump": "Export old dump",
     "import_dump": "Import old dump",
     "exit": "Exit",
+
     "show_all": "Show all",
     "translated_only": "Show translated only",
     "pending_only": "Show pending only",
     "text_only": "Show text only",
     "validate": "Validate translations",
+
     "search": "Search:",
     "clear": "Clear",
     "entries": "Entries",
@@ -35,31 +46,42 @@ ENGLISH = {
     "text": "Text",
     "original": "Original text",
     "translation": "Translation",
+
     "show_hidden": "Show hidden bytes/commands",
+    "edit_original_hex": (
+        "Edit current original with hex values"
+    ),
     "preserved": "Preserved bytes",
+
     "translated": "Translated",
     "pending": "Pending",
     "command": "Command",
+
     "none_hidden": "✓ No hidden commands",
     "hidden": "⚙ {count} preserved block(s) · {size} bytes",
     "unavailable": "Hidden bytes unavailable",
     "no_hidden": "No hidden bytes found.",
+
     "no_project": "No project open",
     "dictionary_required": "Dictionary required",
     "open_dictionary_first": "Open the dictionary first.",
     "project_required": "Project required",
     "open_project_first": "Open a BIN or JSON project first.",
+
     "loaded_dictionary": "Dictionary loaded: {name}",
     "opened_bin": "BIN opened: {name} — {count} entries",
     "opened_project": "Project opened: {name} — {count} entries",
     "saved_project": "Project saved: {name}",
     "exported_bin": "BIN exported: {name}",
+
     "warnings": "Dictionary warnings",
     "validation": "Validation",
     "valid": "No invalid characters found.",
     "invalid": "Invalid characters",
+    "error": "Error",
     "imported": "Import completed",
     "import_result": "Imported: {a}\nSkipped: {b}",
+
     "old_project": (
         "[Old project without raw bytes]\n\n"
         "Open the original BIN and save a new project."
@@ -68,206 +90,304 @@ ENGLISH = {
         "This entry has no original raw bytes.\n\n"
         "Open the original BIN and save a new project."
     ),
+
     "separator": "──────── ⚙ preserved commands here ────────",
     "save_before_exit": "Save the project before exiting?",
+
+    "original_edit_warning": (
+        "You are editing the original bytes of the current entry.\n\n"
+        "Use hexadecimal tags such as <fe><02><30>.\n"
+        "Changing the original bytes clears this entry's translation."
+    ),
+    "original_invalid": "Invalid original text",
+    "original_changed": (
+        "The original bytes were changed.\n"
+        "The current translation was cleared."
+    ),
+
     "rel": "rel",
     "abs": "abs",
     "bytes": "bytes",
     "tags": "tags",
 }
 
-SPANISH = {
-    **ENGLISH,
-    "title": "Riviera - Editor de textos",
-    "file": "Archivo",
-    "tools": "Herramientas",
-    "language": "Idioma",
-    "dictionary": "Abrir diccionario",
-    "open_bin": "Abrir BIN",
-    "open_json": "Abrir proyecto JSON",
-    "save": "Guardar",
-    "save_as": "Guardar proyecto como...",
-    "export_bin": "Exportar BIN",
-    "export_dump": "Exportar dump antiguo",
-    "import_dump": "Importar dump antiguo",
-    "exit": "Salir",
-    "show_all": "Mostrar todos",
-    "translated_only": "Mostrar solo traducidos",
-    "pending_only": "Mostrar solo pendientes",
-    "text_only": "Mostrar solo textos",
-    "validate": "Validar traducciones",
-    "search": "Buscar:",
-    "clear": "Limpiar",
-    "entries": "Entradas",
-    "status": "Estado",
-    "text": "Texto",
-    "original": "Texto original",
-    "translation": "Traducción",
-    "show_hidden": "Mostrar bytes/comandos ocultos",
-    "preserved": "Bytes preservados",
-    "translated": "Traducida",
-    "pending": "Pendiente",
-    "command": "Comando",
-    "none_hidden": "✓ No hay comandos ocultos",
-    "hidden": "⚙ {count} bloque(s) preservado(s) · {size} bytes",
-    "unavailable": "Bytes ocultos no disponibles",
-    "no_hidden": "No se encontraron bytes ocultos.",
-    "no_project": "Ningún proyecto abierto",
-    "dictionary_required": "Diccionario necesario",
-    "open_dictionary_first": "Abra primero el diccionario.",
-    "project_required": "Proyecto necesario",
-    "open_project_first": "Abra primero un BIN o proyecto JSON.",
-    "loaded_dictionary": "Diccionario cargado: {name}",
-    "opened_bin": "BIN abierto: {name} — {count} entradas",
-    "opened_project": "Proyecto abierto: {name} — {count} entradas",
-    "saved_project": "Proyecto guardado: {name}",
-    "exported_bin": "BIN exportado: {name}",
-    "warnings": "Avisos del diccionario",
-    "validation": "Validación",
-    "valid": "No se encontraron caracteres inválidos.",
-    "invalid": "Caracteres inválidos",
-    "imported": "Importación completada",
-    "import_result": "Importadas: {a}\nIgnoradas: {b}",
-    "old_project": (
+
+def make_language(**values):
+    language = dict(BASE_LANGUAGE)
+    language.update(values)
+    return language
+
+
+ENGLISH = dict(BASE_LANGUAGE)
+
+
+SPANISH = make_language(
+    title=(
+        "Riviera: The Promised Land - PSP - "
+        "Editor de textos"
+    ),
+    file="Archivo",
+    tools="Herramientas",
+    language="Idioma",
+    about="Acerca de",
+    about_title="Acerca de Riviera",
+    about_name=(
+        "Riviera: The Promised Land\n"
+        "PSP\n\n"
+        "Editor de textos"
+    ),
+    creator="Creador",
+    website="Página web",
+    close="Cerrar",
+    dictionary="Abrir diccionario",
+    open_bin="Abrir BIN",
+    open_json="Abrir proyecto JSON",
+    save="Guardar",
+    save_as="Guardar proyecto como...",
+    export_bin="Exportar BIN",
+    export_dump="Exportar dump antiguo",
+    import_dump="Importar dump antiguo",
+    exit="Salir",
+    show_all="Mostrar todos",
+    translated_only="Mostrar solo traducidos",
+    pending_only="Mostrar solo pendientes",
+    text_only="Mostrar solo textos",
+    validate="Validar traducciones",
+    search="Buscar:",
+    clear="Limpiar",
+    entries="Entradas",
+    status="Estado",
+    text="Texto",
+    original="Texto original",
+    translation="Traducción",
+    show_hidden="Mostrar bytes/comandos ocultos",
+    edit_original_hex=(
+        "Editar el original actual con valores hex"
+    ),
+    preserved="Bytes preservados",
+    translated="Traducida",
+    pending="Pendiente",
+    command="Comando",
+    none_hidden="✓ No hay comandos ocultos",
+    unavailable="Bytes ocultos no disponibles",
+    no_hidden="No se encontraron bytes ocultos.",
+    no_project="Ningún proyecto abierto",
+    dictionary_required="Diccionario necesario",
+    open_dictionary_first="Abra primero el diccionario.",
+    project_required="Proyecto necesario",
+    open_project_first="Abra primero un BIN o proyecto JSON.",
+    loaded_dictionary="Diccionario cargado: {name}",
+    opened_bin="BIN abierto: {name} — {count} entradas",
+    opened_project="Proyecto abierto: {name} — {count} entradas",
+    saved_project="Proyecto guardado: {name}",
+    exported_bin="BIN exportado: {name}",
+    warnings="Avisos del diccionario",
+    validation="Validación",
+    valid="No se encontraron caracteres inválidos.",
+    invalid="Caracteres inválidos",
+    imported="Importación completada",
+    import_result="Importadas: {a}\nIgnoradas: {b}",
+    old_project=(
         "[Proyecto antiguo sin bytes raw]\n\n"
         "Abra el BIN original y guarde un proyecto nuevo."
     ),
-    "raw_missing": (
+    raw_missing=(
         "Esta entrada no tiene bytes raw originales.\n\n"
         "Abra el BIN original y guarde un proyecto nuevo."
     ),
-    "separator": "──────── ⚙ comandos preservados aquí ────────",
-    "save_before_exit": "¿Guardar el proyecto antes de salir?",
-}
+    separator="──────── ⚙ comandos preservados aquí ────────",
+    save_before_exit="¿Guardar el proyecto antes de salir?",
+    original_edit_warning=(
+        "Está editando los bytes originales de la entrada actual.\n\n"
+        "Use etiquetas hexadecimales como <fe><02><30>.\n"
+        "Cambiar los bytes originales borrará la traducción."
+    ),
+    original_invalid="Texto original inválido",
+    original_changed=(
+        "Los bytes originales fueron modificados.\n"
+        "La traducción actual fue borrada."
+    ),
+    bytes="bytes",
+    tags="etiquetas",
+)
 
-FRENCH = {
-    **ENGLISH,
-    "title": "Riviera - Éditeur de textes",
-    "file": "Fichier",
-    "tools": "Outils",
-    "language": "Langue",
-    "dictionary": "Ouvrir le dictionnaire",
-    "open_bin": "Ouvrir le BIN",
-    "open_json": "Ouvrir le projet JSON",
-    "save": "Enregistrer",
-    "save_as": "Enregistrer le projet sous...",
-    "export_bin": "Exporter le BIN",
-    "export_dump": "Exporter l'ancien dump",
-    "import_dump": "Importer l'ancien dump",
-    "exit": "Quitter",
-    "show_all": "Afficher tout",
-    "translated_only": "Afficher uniquement les traductions",
-    "pending_only": "Afficher uniquement les textes en attente",
-    "text_only": "Afficher uniquement les textes",
-    "validate": "Valider les traductions",
-    "search": "Rechercher :",
-    "clear": "Effacer",
-    "entries": "Entrées",
-    "status": "État",
-    "text": "Texte",
-    "original": "Texte original",
-    "translation": "Traduction",
-    "show_hidden": "Afficher les octets/commandes masqués",
-    "preserved": "Octets préservés",
-    "translated": "Traduit",
-    "pending": "En attente",
-    "command": "Commande",
-    "none_hidden": "✓ Aucune commande masquée",
-    "hidden": "⚙ {count} bloc(s) préservé(s) · {size} octets",
-    "unavailable": "Octets masqués indisponibles",
-    "no_hidden": "Aucun octet masqué trouvé.",
-    "no_project": "Aucun projet ouvert",
-    "dictionary_required": "Dictionnaire nécessaire",
-    "open_dictionary_first": "Ouvrez d'abord le dictionnaire.",
-    "project_required": "Projet nécessaire",
-    "open_project_first": "Ouvrez d'abord un BIN ou un projet JSON.",
-    "loaded_dictionary": "Dictionnaire chargé : {name}",
-    "opened_bin": "BIN ouvert : {name} — {count} entrées",
-    "opened_project": "Projet ouvert : {name} — {count} entrées",
-    "saved_project": "Projet enregistré : {name}",
-    "exported_bin": "BIN exporté : {name}",
-    "warnings": "Avertissements du dictionnaire",
-    "validation": "Validation",
-    "valid": "Aucun caractère invalide trouvé.",
-    "invalid": "Caractères invalides",
-    "imported": "Importation terminée",
-    "import_result": "Importées : {a}\nIgnorées : {b}",
-    "old_project": (
+
+FRENCH = make_language(
+    title=(
+        "Riviera: The Promised Land - PSP - "
+        "Éditeur de textes"
+    ),
+    file="Fichier",
+    tools="Outils",
+    language="Langue",
+    about="À propos",
+    about_title="À propos de Riviera",
+    about_name=(
+        "Riviera: The Promised Land\n"
+        "PSP\n\n"
+        "Éditeur de textes"
+    ),
+    creator="Créateur",
+    website="Site web",
+    close="Fermer",
+    dictionary="Ouvrir le dictionnaire",
+    open_bin="Ouvrir le BIN",
+    open_json="Ouvrir le projet JSON",
+    save="Enregistrer",
+    save_as="Enregistrer le projet sous...",
+    export_bin="Exporter le BIN",
+    export_dump="Exporter l'ancien dump",
+    import_dump="Importer l'ancien dump",
+    exit="Quitter",
+    show_all="Afficher tout",
+    translated_only="Afficher uniquement les traductions",
+    pending_only="Afficher uniquement les textes en attente",
+    text_only="Afficher uniquement les textes",
+    validate="Valider les traductions",
+    search="Rechercher :",
+    clear="Effacer",
+    entries="Entrées",
+    status="État",
+    text="Texte",
+    original="Texte original",
+    translation="Traduction",
+    show_hidden="Afficher les octets/commandes masqués",
+    edit_original_hex=(
+        "Modifier l'original actuel avec des valeurs hex"
+    ),
+    preserved="Octets préservés",
+    translated="Traduit",
+    pending="En attente",
+    command="Commande",
+    none_hidden="✓ Aucune commande masquée",
+    unavailable="Octets masqués indisponibles",
+    no_hidden="Aucun octet masqué trouvé.",
+    no_project="Aucun projet ouvert",
+    dictionary_required="Dictionnaire nécessaire",
+    open_dictionary_first="Ouvrez d'abord le dictionnaire.",
+    project_required="Projet nécessaire",
+    open_project_first="Ouvrez d'abord un BIN ou un projet JSON.",
+    loaded_dictionary="Dictionnaire chargé : {name}",
+    opened_bin="BIN ouvert : {name} — {count} entrées",
+    opened_project="Projet ouvert : {name} — {count} entrées",
+    saved_project="Projet enregistré : {name}",
+    exported_bin="BIN exporté : {name}",
+    warnings="Avertissements du dictionnaire",
+    validation="Validation",
+    valid="Aucun caractère invalide trouvé.",
+    invalid="Caractères invalides",
+    imported="Importation terminée",
+    import_result="Importées : {a}\nIgnorées : {b}",
+    old_project=(
         "[Ancien projet sans octets raw]\n\n"
         "Ouvrez le BIN original et créez un nouveau projet."
     ),
-    "raw_missing": (
+    raw_missing=(
         "Cette entrée ne contient pas les octets raw originaux.\n\n"
         "Ouvrez le BIN original et créez un nouveau projet."
     ),
-    "separator": "──────── ⚙ commandes préservées ici ────────",
-    "save_before_exit": "Enregistrer le projet avant de quitter ?",
-    "bytes": "octets",
-}
+    separator="──────── ⚙ commandes préservées ici ────────",
+    save_before_exit="Enregistrer le projet avant de quitter ?",
+    original_edit_warning=(
+        "Vous modifiez les octets originaux de l'entrée actuelle.\n\n"
+        "Utilisez des balises comme <fe><02><30>.\n"
+        "Modifier les octets supprimera la traduction."
+    ),
+    original_invalid="Texte original invalide",
+    original_changed=(
+        "Les octets originaux ont été modifiés.\n"
+        "La traduction actuelle a été supprimée."
+    ),
+    bytes="octets",
+)
 
-PORTUGUESE = {
-    **ENGLISH,
-    "title": "Riviera - Editor de Textos",
-    "file": "Arquivo",
-    "tools": "Ferramentas",
-    "language": "Idioma",
-    "dictionary": "Abrir dicionário",
-    "open_bin": "Abrir BIN",
-    "open_json": "Abrir projeto JSON",
-    "save": "Salvar",
-    "save_as": "Salvar projeto como...",
-    "export_bin": "Exportar BIN",
-    "export_dump": "Exportar dump antigo",
-    "import_dump": "Importar dump antigo",
-    "exit": "Sair",
-    "show_all": "Mostrar todas",
-    "translated_only": "Mostrar somente traduzidas",
-    "pending_only": "Mostrar somente pendentes",
-    "text_only": "Mostrar somente textos",
-    "validate": "Validar traduções",
-    "search": "Buscar:",
-    "clear": "Limpar",
-    "entries": "Entradas",
-    "status": "Estado",
-    "text": "Texto",
-    "original": "Texto original",
-    "translation": "Tradução",
-    "show_hidden": "Mostrar bytes ocultos/comandos",
-    "preserved": "Bytes preservados",
-    "translated": "Traduzida",
-    "pending": "Pendente",
-    "command": "Comando",
-    "none_hidden": "✓ Nenhum comando oculto",
-    "hidden": "⚙ {count} bloco(s) preservado(s) · {size} bytes",
-    "unavailable": "Bytes ocultos indisponíveis",
-    "no_hidden": "Nenhum byte oculto encontrado.",
-    "no_project": "Nenhum projeto aberto",
-    "dictionary_required": "Dicionário necessário",
-    "open_dictionary_first": "Abra o dicionário primeiro.",
-    "project_required": "Projeto necessário",
-    "open_project_first": "Abra um BIN ou projeto JSON primeiro.",
-    "loaded_dictionary": "Dicionário carregado: {name}",
-    "opened_bin": "BIN aberto: {name} — {count} entradas",
-    "opened_project": "Projeto aberto: {name} — {count} entradas",
-    "saved_project": "Projeto salvo: {name}",
-    "exported_bin": "BIN exportado: {name}",
-    "warnings": "Avisos do dicionário",
-    "validation": "Validação",
-    "valid": "Nenhum caractere inválido encontrado.",
-    "invalid": "Caracteres inválidos",
-    "imported": "Importação concluída",
-    "import_result": "Importadas: {a}\nIgnoradas: {b}",
-    "old_project": (
+
+PORTUGUESE = make_language(
+    title=(
+        "Riviera: The Promised Land - PSP - "
+        "Editor de Textos"
+    ),
+    file="Arquivo",
+    tools="Ferramentas",
+    language="Idioma",
+    about="Sobre",
+    about_title="Sobre o Riviera",
+    about_name=(
+        "Riviera: The Promised Land\n"
+        "PSP\n\n"
+        "Editor de Textos"
+    ),
+    creator="Criador",
+    website="Página",
+    close="Fechar",
+    dictionary="Abrir dicionário",
+    open_bin="Abrir BIN",
+    open_json="Abrir projeto JSON",
+    save="Salvar",
+    save_as="Salvar projeto como...",
+    export_bin="Exportar BIN",
+    export_dump="Exportar dump antigo",
+    import_dump="Importar dump antigo",
+    exit="Sair",
+    show_all="Mostrar todas",
+    translated_only="Mostrar somente traduzidas",
+    pending_only="Mostrar somente pendentes",
+    text_only="Mostrar somente textos",
+    validate="Validar traduções",
+    search="Buscar:",
+    clear="Limpar",
+    entries="Entradas",
+    status="Estado",
+    text="Texto",
+    original="Texto original",
+    translation="Tradução",
+    show_hidden="Mostrar bytes ocultos/comandos",
+    edit_original_hex="Editar o original atual com valores hex",
+    preserved="Bytes preservados",
+    translated="Traduzida",
+    pending="Pendente",
+    command="Comando",
+    none_hidden="✓ Nenhum comando oculto",
+    unavailable="Bytes ocultos indisponíveis",
+    no_hidden="Nenhum byte oculto encontrado.",
+    no_project="Nenhum projeto aberto",
+    dictionary_required="Dicionário necessário",
+    open_dictionary_first="Abra o dicionário primeiro.",
+    project_required="Projeto necessário",
+    open_project_first="Abra um BIN ou projeto JSON primeiro.",
+    loaded_dictionary="Dicionário carregado: {name}",
+    opened_bin="BIN aberto: {name} — {count} entradas",
+    opened_project="Projeto aberto: {name} — {count} entradas",
+    saved_project="Projeto salvo: {name}",
+    exported_bin="BIN exportado: {name}",
+    warnings="Avisos do dicionário",
+    validation="Validação",
+    valid="Nenhum caractere inválido encontrado.",
+    invalid="Caracteres inválidos",
+    imported="Importação concluída",
+    import_result="Importadas: {a}\nIgnoradas: {b}",
+    old_project=(
         "[Projeto antigo sem bytes raw]\n\n"
         "Abra o BIN original e salve um projeto novo."
     ),
-    "raw_missing": (
+    raw_missing=(
         "Esta entrada não possui os bytes raw originais.\n\n"
         "Abra o BIN original e salve um projeto novo."
     ),
-    "separator": "──────── ⚙ comandos preservados aqui ────────",
-    "save_before_exit": "Deseja salvar o projeto antes de sair?",
-}
+    separator="──────── ⚙ comandos preservados aqui ────────",
+    save_before_exit="Deseja salvar o projeto antes de sair?",
+    original_edit_warning=(
+        "Você está editando os bytes originais da entrada atual.\n\n"
+        "Use tags hexadecimais como <fe><02><30>.\n"
+        "Alterar os bytes originais apagará a tradução desta entrada."
+    ),
+    original_invalid="Texto original inválido",
+    original_changed=(
+        "Os bytes originais foram alterados.\n"
+        "A tradução atual foi apagada."
+    ),
+)
+
 
 LANGUAGES = {
     "English": ENGLISH,
@@ -280,6 +400,8 @@ LANGUAGES = {
 class RivieraEditor(tk.Tk):
     def __init__(self):
         super().__init__()
+
+        self._set_window_icon()
 
         self.language_name = "English"
         self.lang = LANGUAGES[self.language_name]
@@ -294,9 +416,16 @@ class RivieraEditor(tk.Tk):
         self.current_index = None
         self.filter_mode = "all"
 
-        self.show_hidden_bytes = tk.BooleanVar(value=False)
+        self.show_hidden_bytes = tk.BooleanVar(
+            value=False
+        )
+        self.edit_original_hex = tk.BooleanVar(
+            value=False
+        )
+
         self.search_var = tk.StringVar()
         self.hidden_summary_var = tk.StringVar()
+        self.about_window = None
 
         self._create_menu()
         self._create_widgets()
@@ -310,13 +439,33 @@ class RivieraEditor(tk.Tk):
         self.title(self.tr("title"))
         self._update_hidden_summary()
 
-    # ==============================================================
-    # Idiomas
-    # ==============================================================
+    # ==========================================================
+    # Janela e idioma
+    # ==========================================================
+
+    def _set_window_icon(self):
+        icon_path = os.path.join(
+            os.path.dirname(
+                os.path.abspath(__file__)
+            ),
+            "riviera.ico",
+        )
+
+        if not os.path.exists(icon_path):
+            return
+
+        try:
+            self.iconbitmap(icon_path)
+        except tk.TclError:
+            pass
 
     def tr(self, key, **values):
         text = self.lang.get(key, key)
-        return text.format(**values) if values else text
+
+        if values:
+            return text.format(**values)
+
+        return text
 
     def change_language(self, name):
         if name not in LANGUAGES:
@@ -331,15 +480,16 @@ class RivieraEditor(tk.Tk):
 
         self._rebuild_menus()
         self._update_widget_texts()
+        self._update_about_texts()
         self._refresh_tree()
         self._update_hidden_summary()
         self._update_hidden_bytes()
 
         self.title(self.tr("title"))
 
-    # ==============================================================
+    # ==========================================================
     # Menus
-    # ==============================================================
+    # ==========================================================
 
     def _create_menu(self):
         self.menu_bar = tk.Menu(self)
@@ -356,12 +506,15 @@ class RivieraEditor(tk.Tk):
             self.menu_bar,
             tearoff=False,
         )
+        self.about_menu = tk.Menu(
+            self.menu_bar,
+            tearoff=False,
+        )
 
-        # Guardamos os índices. Não usamos self.menu_bar.index(menu),
-        # pois o Tkinter não aceita o objeto Menu como índice.
         self.file_menu_index = 0
         self.tools_menu_index = 1
         self.language_menu_index = 2
+        self.about_menu_index = 3
 
         self.menu_bar.add_cascade(
             label=self.tr("file"),
@@ -375,6 +528,10 @@ class RivieraEditor(tk.Tk):
             label=self.tr("language"),
             menu=self.language_menu,
         )
+        self.menu_bar.add_cascade(
+            label=self.tr("about"),
+            menu=self.about_menu,
+        )
 
         self.config(menu=self.menu_bar)
         self._rebuild_menus()
@@ -383,8 +540,8 @@ class RivieraEditor(tk.Tk):
         self.file_menu.delete(0, tk.END)
         self.tools_menu.delete(0, tk.END)
         self.language_menu.delete(0, tk.END)
+        self.about_menu.delete(0, tk.END)
 
-        # Atualiza os nomes File/Tools/Language.
         self.menu_bar.entryconfigure(
             self.file_menu_index,
             label=self.tr("file"),
@@ -397,8 +554,11 @@ class RivieraEditor(tk.Tk):
             self.language_menu_index,
             label=self.tr("language"),
         )
+        self.menu_bar.entryconfigure(
+            self.about_menu_index,
+            label=self.tr("about"),
+        )
 
-        # Arquivo
         self.file_menu.add_command(
             label=self.tr("dictionary"),
             command=self.open_dictionary,
@@ -439,7 +599,6 @@ class RivieraEditor(tk.Tk):
             command=self._on_close,
         )
 
-        # Ferramentas
         self.tools_menu.add_command(
             label=self.tr("show_all"),
             command=lambda: self.set_filter("all"),
@@ -462,7 +621,6 @@ class RivieraEditor(tk.Tk):
             command=self.validate_project,
         )
 
-        # Idioma
         for language in LANGUAGES:
             self.language_menu.add_radiobutton(
                 label=language,
@@ -473,9 +631,14 @@ class RivieraEditor(tk.Tk):
                 ),
             )
 
-    # ==============================================================
-    # Interface
-    # ==============================================================
+        self.about_menu.add_command(
+            label=self.tr("about"),
+            command=self.show_about,
+        )
+
+    # ==========================================================
+    # Interface principal
+    # ==========================================================
 
     def _create_widgets(self):
         top = ttk.Frame(self, padding=6)
@@ -486,42 +649,60 @@ class RivieraEditor(tk.Tk):
             text=self.tr("dictionary"),
             command=self.open_dictionary,
         )
-        self.dictionary_button.pack(side=tk.LEFT, padx=3)
+        self.dictionary_button.pack(
+            side=tk.LEFT,
+            padx=3,
+        )
 
         self.open_bin_button = ttk.Button(
             top,
             text=self.tr("open_bin"),
             command=self.open_bin,
         )
-        self.open_bin_button.pack(side=tk.LEFT, padx=3)
+        self.open_bin_button.pack(
+            side=tk.LEFT,
+            padx=3,
+        )
 
         self.open_json_button = ttk.Button(
             top,
             text=self.tr("open_json"),
             command=self.open_project,
         )
-        self.open_json_button.pack(side=tk.LEFT, padx=3)
+        self.open_json_button.pack(
+            side=tk.LEFT,
+            padx=3,
+        )
 
         self.save_button = ttk.Button(
             top,
             text=self.tr("save"),
             command=self.save_project,
         )
-        self.save_button.pack(side=tk.LEFT, padx=3)
+        self.save_button.pack(
+            side=tk.LEFT,
+            padx=3,
+        )
 
         self.export_button = ttk.Button(
             top,
             text=self.tr("export_bin"),
             command=self.export_bin,
         )
-        self.export_button.pack(side=tk.LEFT, padx=3)
+        self.export_button.pack(
+            side=tk.LEFT,
+            padx=3,
+        )
 
         self.validate_button = ttk.Button(
             top,
             text=self.tr("validate"),
             command=self.validate_project,
         )
-        self.validate_button.pack(side=tk.LEFT, padx=3)
+        self.validate_button.pack(
+            side=tk.LEFT,
+            padx=3,
+        )
 
         self.search_label = ttk.Label(
             top,
@@ -549,7 +730,10 @@ class RivieraEditor(tk.Tk):
             text=self.tr("clear"),
             command=lambda: self.search_var.set(""),
         )
-        self.clear_button.pack(side=tk.LEFT, padx=4)
+        self.clear_button.pack(
+            side=tk.LEFT,
+            padx=4,
+        )
 
         main = ttk.PanedWindow(
             self,
@@ -591,14 +775,23 @@ class RivieraEditor(tk.Tk):
         )
         self.entries_label.pack(anchor=tk.W)
 
-        self.entry_count_var = tk.StringVar(value="0")
+        self.entry_count_var = tk.StringVar(
+            value="0"
+        )
+
         ttk.Label(
             left,
             textvariable=self.entry_count_var,
-        ).pack(anchor=tk.W, pady=(2, 5))
+        ).pack(
+            anchor=tk.W,
+            pady=(2, 5),
+        )
 
         frame = ttk.Frame(left)
-        frame.pack(fill=tk.BOTH, expand=True)
+        frame.pack(
+            fill=tk.BOTH,
+            expand=True,
+        )
 
         self.tree = ttk.Treeview(
             frame,
@@ -607,7 +800,10 @@ class RivieraEditor(tk.Tk):
             selectmode="browse",
         )
 
-        self.tree.heading("index", text="#")
+        self.tree.heading(
+            "index",
+            text="#",
+        )
         self.tree.heading(
             "status",
             text=self.tr("status"),
@@ -624,7 +820,7 @@ class RivieraEditor(tk.Tk):
         )
         self.tree.column(
             "status",
-            width=120,
+            width=140,
             anchor=tk.CENTER,
         )
         self.tree.column(
@@ -658,7 +854,9 @@ class RivieraEditor(tk.Tk):
             side=tk.RIGHT,
             fill=tk.Y,
         )
-        scroll_x.pack(fill=tk.X)
+        scroll_x.pack(
+            fill=tk.X,
+        )
 
         self.tree.bind(
             "<<TreeviewSelect>>",
@@ -712,7 +910,10 @@ class RivieraEditor(tk.Tk):
         )
 
         header = ttk.Frame(right)
-        header.pack(fill=tk.X, pady=(0, 5))
+        header.pack(
+            fill=tk.X,
+            pady=(0, 5),
+        )
 
         self.hidden_check = ttk.Checkbutton(
             header,
@@ -720,7 +921,20 @@ class RivieraEditor(tk.Tk):
             variable=self.show_hidden_bytes,
             command=self._toggle_hidden_bytes,
         )
-        self.hidden_check.pack(side=tk.LEFT)
+        self.hidden_check.pack(
+            side=tk.LEFT,
+        )
+
+        self.edit_original_check = ttk.Checkbutton(
+            header,
+            text=self.tr("edit_original_hex"),
+            variable=self.edit_original_hex,
+            command=self._toggle_original_hex,
+        )
+        self.edit_original_check.pack(
+            side=tk.LEFT,
+            padx=(16, 0),
+        )
 
         self.hidden_summary_label = tk.Label(
             header,
@@ -740,8 +954,13 @@ class RivieraEditor(tk.Tk):
             padding=5,
         )
 
-        hidden_inner = ttk.Frame(self.hidden_frame)
-        hidden_inner.pack(fill=tk.BOTH, expand=True)
+        hidden_inner = ttk.Frame(
+            self.hidden_frame
+        )
+        hidden_inner.pack(
+            fill=tk.BOTH,
+            expand=True,
+        )
 
         self.hidden_text = tk.Text(
             hidden_inner,
@@ -856,6 +1075,9 @@ class RivieraEditor(tk.Tk):
         self.hidden_check.configure(
             text=self.tr("show_hidden")
         )
+        self.edit_original_check.configure(
+            text=self.tr("edit_original_hex")
+        )
         self.hidden_frame.configure(
             text=self.tr("preserved")
         )
@@ -868,6 +1090,204 @@ class RivieraEditor(tk.Tk):
             "text",
             text=self.tr("text"),
         )
+
+    # ==========================================================
+    # About
+    # ==========================================================
+
+    def show_about(self):
+        if (
+            self.about_window is not None
+            and self.about_window.winfo_exists()
+        ):
+            self.about_window.lift()
+            self.about_window.focus_force()
+            return
+
+        self.about_window = tk.Toplevel(self)
+        window = self.about_window
+
+        icon_path = os.path.join(
+            os.path.dirname(
+                os.path.abspath(__file__)
+            ),
+            "riviera.ico",
+        )
+
+        if os.path.exists(icon_path):
+            try:
+                window.iconbitmap(icon_path)
+            except tk.TclError:
+                pass
+
+        window.title(self.tr("about_title"))
+        window.transient(self)
+        window.resizable(False, False)
+        window.protocol(
+            "WM_DELETE_WINDOW",
+            self._close_about,
+        )
+
+        outer = ttk.Frame(
+            window,
+            padding=24,
+        )
+        outer.pack(
+            fill=tk.BOTH,
+            expand=True,
+        )
+
+        self.about_name_label = ttk.Label(
+            outer,
+            text=self.tr("about_name"),
+            justify=tk.CENTER,
+            font=("TkDefaultFont", 15, "bold"),
+        )
+        self.about_name_label.pack(
+            pady=(0, 18),
+        )
+
+        self.about_creator_label = ttk.Label(
+            outer,
+            text="",
+        )
+        self.about_creator_label.pack(
+            anchor=tk.W,
+            pady=2,
+        )
+
+        self.about_website_label = ttk.Label(
+            outer,
+            text="",
+            foreground="#146cbe",
+            cursor="hand2",
+        )
+        self.about_website_label.pack(
+            anchor=tk.W,
+            pady=2,
+        )
+        self.about_website_label.bind(
+            "<Button-1>",
+            lambda event: webbrowser.open(
+                "https://www.lucjedi.com"
+            ),
+        )
+
+        self.about_github_label = ttk.Label(
+            outer,
+            text="",
+            foreground="#146cbe",
+            cursor="hand2",
+        )
+        self.about_github_label.pack(
+            anchor=tk.W,
+            pady=2,
+        )
+        self.about_github_label.bind(
+            "<Button-1>",
+            lambda event: webbrowser.open(
+                "https://github.com/lucjedi"
+            ),
+        )
+
+        ttk.Separator(
+            outer,
+            orient=tk.HORIZONTAL,
+        ).pack(
+            fill=tk.X,
+            pady=(18, 12),
+        )
+
+        self.about_close_button = ttk.Button(
+            outer,
+            text=self.tr("close"),
+            command=self._close_about,
+        )
+        self.about_close_button.pack()
+
+        window.bind(
+            "<Escape>",
+            lambda event: self._close_about(),
+        )
+
+        self._update_about_texts()
+
+        window.update_idletasks()
+
+        width = window.winfo_width()
+        height = window.winfo_height()
+
+        parent_x = self.winfo_rootx()
+        parent_y = self.winfo_rooty()
+        parent_width = self.winfo_width()
+        parent_height = self.winfo_height()
+
+        x = parent_x + max(
+            0,
+            (parent_width - width) // 2,
+        )
+        y = parent_y + max(
+            0,
+            (parent_height - height) // 2,
+        )
+
+        window.geometry(
+            f"{width}x{height}+{x}+{y}"
+        )
+
+        window.grab_set()
+        window.focus_force()
+
+    def _update_about_texts(self):
+        if (
+            self.about_window is None
+            or not self.about_window.winfo_exists()
+        ):
+            return
+
+        self.about_window.title(
+            self.tr("about_title")
+        )
+
+        self.about_name_label.configure(
+            text=self.tr("about_name")
+        )
+        self.about_creator_label.configure(
+            text=f"{self.tr('creator')}: Lucjedi"
+        )
+        self.about_website_label.configure(
+            text=(
+                f"{self.tr('website')}: "
+                "www.lucjedi.com"
+            )
+        )
+        self.about_github_label.configure(
+            text=(
+                f"{self.tr('github')}: "
+                "https://github.com/lucjedi"
+            )
+        )
+        self.about_close_button.configure(
+            text=self.tr("close")
+        )
+
+    def _close_about(self):
+        if (
+            self.about_window is not None
+            and self.about_window.winfo_exists()
+        ):
+            try:
+                self.about_window.grab_release()
+            except tk.TclError:
+                pass
+
+            self.about_window.destroy()
+
+        self.about_window = None
+
+    # ==========================================================
+    # Atalhos
+    # ==========================================================
 
     def _bind_shortcuts(self):
         self.bind_all(
@@ -883,9 +1303,9 @@ class RivieraEditor(tk.Tk):
             lambda event: self.export_bin(),
         )
 
-    # ==============================================================
+    # ==========================================================
     # Arquivos
-    # ==============================================================
+    # ==========================================================
 
     def open_dictionary(self):
         path = filedialog.askopenfilename(
@@ -913,7 +1333,9 @@ class RivieraEditor(tk.Tk):
             if self.table.warnings:
                 messagebox.showwarning(
                     self.tr("warnings"),
-                    "\n".join(self.table.warnings[:50]),
+                    "\n".join(
+                        self.table.warnings[:50]
+                    ),
                 )
 
             if self.project:
@@ -967,6 +1389,7 @@ class RivieraEditor(tk.Tk):
 
             self.project_path = None
             self.current_index = None
+            self.edit_original_hex.set(False)
 
             self._refresh_tree()
             self._clear_editor()
@@ -1001,14 +1424,11 @@ class RivieraEditor(tk.Tk):
             project = Project.load(path)
             table = None
 
-            # Primeiro usa o dicionário embutido no JSON.
             if project.dictionary_data:
                 table = Table.from_data(
                     project.dictionary_data,
                     project.dictionary_path or None,
                 )
-
-            # Compatibilidade: tenta o caminho salvo.
             elif (
                 project.dictionary_path
                 and os.path.exists(project.dictionary_path)
@@ -1017,7 +1437,6 @@ class RivieraEditor(tk.Tk):
                     project.dictionary_path
                 )
 
-            # Compatibilidade com JSONs antigos.
             if table is None:
                 dictionary_path = filedialog.askopenfilename(
                     title=self.tr("dictionary"),
@@ -1041,6 +1460,7 @@ class RivieraEditor(tk.Tk):
                 project.dictionary_path or table.path
             )
             self.current_index = None
+            self.edit_original_hex.set(False)
 
             if project.language in LANGUAGES:
                 self.change_language(project.language)
@@ -1082,6 +1502,9 @@ class RivieraEditor(tk.Tk):
         if not self._require_project():
             return
 
+        if not self._save_original_hex_edit():
+            return
+
         self._save_current_entry()
         self._save_metadata()
 
@@ -1109,6 +1532,9 @@ class RivieraEditor(tk.Tk):
 
     def save_project_as(self):
         if not self._require_project():
+            return
+
+        if not self._save_original_hex_edit():
             return
 
         self._save_current_entry()
@@ -1151,6 +1577,9 @@ class RivieraEditor(tk.Tk):
         if not self._require_table():
             return
 
+        if not self._save_original_hex_edit():
+            return
+
         self._save_current_entry()
 
         path = filedialog.asksaveasfilename(
@@ -1188,6 +1617,7 @@ class RivieraEditor(tk.Tk):
                 f"Entry {index}: {error}"
                 for index, error in exc.errors
             )
+
             messagebox.showerror(
                 self.tr("invalid"),
                 details,
@@ -1201,6 +1631,9 @@ class RivieraEditor(tk.Tk):
 
     def export_dump(self):
         if not self._require_project():
+            return
+
+        if not self._save_original_hex_edit():
             return
 
         self._save_current_entry()
@@ -1247,6 +1680,9 @@ class RivieraEditor(tk.Tk):
             return
 
         try:
+            if not self._save_original_hex_edit():
+                return
+
             self._save_current_entry()
 
             imported, skipped = (
@@ -1270,9 +1706,9 @@ class RivieraEditor(tk.Tk):
                 str(exc),
             )
 
-    # ==============================================================
+    # ==========================================================
     # Edição
-    # ==============================================================
+    # ==========================================================
 
     def _entry_selected(self, event=None):
         selection = self.tree.selection()
@@ -1292,6 +1728,10 @@ class RivieraEditor(tk.Tk):
         if index == self.current_index:
             return
 
+        if not self._save_original_hex_edit():
+            return
+
+        self.edit_original_hex.set(False)
         self._save_current_entry()
         self._load_entry(index)
 
@@ -1303,14 +1743,31 @@ class RivieraEditor(tk.Tk):
         self.current_index = index
 
         clean_text = self._editor_text(entry)
-        display_text = self._display_original(entry)
 
-        self.original_text.configure(state=tk.NORMAL)
-        self.original_text.delete("1.0", tk.END)
-        self.original_text.insert("1.0", display_text)
-        self.original_text.configure(state=tk.DISABLED)
+        if self.edit_original_hex.get():
+            self._show_full_original_for_editing()
+        else:
+            display_text = self._display_original(entry)
 
-        self.translation_text.delete("1.0", tk.END)
+            self.original_text.configure(
+                state=tk.NORMAL
+            )
+            self.original_text.delete(
+                "1.0",
+                tk.END,
+            )
+            self.original_text.insert(
+                "1.0",
+                display_text,
+            )
+            self.original_text.configure(
+                state=tk.DISABLED
+            )
+
+        self.translation_text.delete(
+            "1.0",
+            tk.END,
+        )
         self.translation_text.insert(
             "1.0",
             entry.tr or clean_text,
@@ -1324,6 +1781,111 @@ class RivieraEditor(tk.Tk):
             f"offset: 0x{entry.offset:X} | "
             f"{entry.osize} bytes"
         )
+
+    def _toggle_original_hex(self):
+        if not self.project or self.current_index is None:
+            self.edit_original_hex.set(False)
+            return
+
+        if self.edit_original_hex.get():
+            self._show_full_original_for_editing()
+
+            messagebox.showinfo(
+                self.tr("original_invalid"),
+                self.tr("original_edit_warning"),
+            )
+        else:
+            if not self._save_original_hex_edit():
+                self.edit_original_hex.set(True)
+                return
+
+            self._load_entry(self.current_index)
+
+    def _show_full_original_for_editing(self):
+        if not self.project or not self.table:
+            return
+
+        entry = self.project.entries[
+            self.current_index
+        ]
+        raw = getattr(entry, "raw", b"")
+
+        if raw:
+            try:
+                text = self.table.decode(raw)
+            except Exception:
+                text = entry.orig
+        else:
+            text = entry.orig
+
+        self.original_text.configure(
+            state=tk.NORMAL
+        )
+        self.original_text.delete(
+            "1.0",
+            tk.END,
+        )
+        self.original_text.insert(
+            "1.0",
+            text,
+        )
+
+    def _save_original_hex_edit(self):
+        if not self.edit_original_hex.get():
+            return True
+
+        if not self.project:
+            return True
+
+        if self.current_index is None:
+            return True
+
+        if not self.table:
+            return False
+
+        entry = self.project.entries[
+            self.current_index
+        ]
+
+        text = self.original_text.get(
+            "1.0",
+            "end-1c",
+        )
+
+        try:
+            new_raw = self.table.encode(text)
+        except Exception as exc:
+            messagebox.showerror(
+                self.tr("original_invalid"),
+                str(exc),
+            )
+            return False
+
+        old_raw = getattr(entry, "raw", b"")
+
+        if new_raw != old_raw:
+            entry.raw = new_raw
+
+            try:
+                entry.orig = self.table.decode(new_raw)
+            except Exception:
+                entry.orig = text
+
+            entry.tr = ""
+
+            messagebox.showinfo(
+                self.tr("original_invalid"),
+                self.tr("original_changed"),
+            )
+
+        self.original_text.configure(
+            state=tk.DISABLED
+        )
+
+        self._update_hidden_summary()
+        self._update_hidden_bytes()
+
+        return True
 
     def _editor_text(self, entry):
         if not self.table:
@@ -1381,9 +1943,9 @@ class RivieraEditor(tk.Tk):
         self._save_current_entry()
         self._refresh_tree()
 
-    # ==============================================================
+    # ==========================================================
     # Bytes ocultos
-    # ==============================================================
+    # ==========================================================
 
     def _has_controls(self, entry):
         if not self.table:
@@ -1451,7 +2013,10 @@ class RivieraEditor(tk.Tk):
             return
 
         count = len(controls)
-        size = sum(len(run[2]) for run in controls)
+        size = sum(
+            len(run[2])
+            for run in controls
+        )
 
         if size == 0:
             self.hidden_summary_var.set(
@@ -1486,10 +2051,20 @@ class RivieraEditor(tk.Tk):
             self.hidden_frame.pack_forget()
 
     def _set_hidden_text(self, text):
-        self.hidden_text.configure(state=tk.NORMAL)
-        self.hidden_text.delete("1.0", tk.END)
-        self.hidden_text.insert("1.0", text)
-        self.hidden_text.configure(state=tk.DISABLED)
+        self.hidden_text.configure(
+            state=tk.NORMAL
+        )
+        self.hidden_text.delete(
+            "1.0",
+            tk.END,
+        )
+        self.hidden_text.insert(
+            "1.0",
+            text,
+        )
+        self.hidden_text.configure(
+            state=tk.DISABLED
+        )
 
     def _update_hidden_bytes(self):
         if not self.show_hidden_bytes.get():
@@ -1497,6 +2072,12 @@ class RivieraEditor(tk.Tk):
 
         if not self.project or self.current_index is None:
             self._set_hidden_text("")
+            return
+
+        if not self.table:
+            self._set_hidden_text(
+                self.tr("unavailable")
+            )
             return
 
         entry = self.project.entries[
@@ -1538,9 +2119,9 @@ class RivieraEditor(tk.Tk):
             else self.tr("no_hidden")
         )
 
-    # ==============================================================
+    # ==========================================================
     # Lista, busca e filtros
-    # ==============================================================
+    # ==========================================================
 
     def _refresh_tree(self):
         self.tree.delete(
@@ -1607,7 +2188,11 @@ class RivieraEditor(tk.Tk):
             self.tree.insert(
                 "",
                 tk.END,
-                values=(index, status, preview),
+                values=(
+                    index,
+                    status,
+                    preview,
+                ),
             )
 
             visible += 1
@@ -1618,35 +2203,49 @@ class RivieraEditor(tk.Tk):
 
         if self.current_index is not None:
             for item in self.tree.get_children():
-                values = self.tree.item(item).get(
-                    "values",
-                    [],
-                )
+                values = self.tree.item(
+                    item
+                ).get("values", [])
 
-                if values and int(values[0]) == self.current_index:
+                if (
+                    values
+                    and int(values[0]) == self.current_index
+                ):
                     self.tree.selection_set(item)
                     self.tree.focus(item)
                     self.tree.see(item)
                     break
 
     def set_filter(self, mode):
+        if not self._save_original_hex_edit():
+            return
+
+        self.edit_original_hex.set(False)
         self._save_current_entry()
+
         self.filter_mode = mode
         self._refresh_tree()
 
     def _search_changed(self, *args):
+        if not self._save_original_hex_edit():
+            return
+
+        self.edit_original_hex.set(False)
         self._save_current_entry()
         self._refresh_tree()
 
-    # ==============================================================
+    # ==========================================================
     # Validação e utilidades
-    # ==============================================================
+    # ==========================================================
 
     def validate_project(self):
         if not self._require_project():
             return
 
         if not self._require_table():
+            return
+
+        if not self._save_original_hex_edit():
             return
 
         self._save_current_entry()
@@ -1658,13 +2257,16 @@ class RivieraEditor(tk.Tk):
             if not entry.tr:
                 continue
 
-            invalid = self.table.invalid_spans(entry.tr)
+            invalid = self.table.invalid_spans(
+                entry.tr
+            )
 
             if invalid:
                 snippets = [
                     repr(entry.tr[start:end])
                     for start, end in invalid[:10]
                 ]
+
                 errors.append(
                     f"Entry {index}: "
                     f"{', '.join(snippets)}"
@@ -1703,22 +2305,40 @@ class RivieraEditor(tk.Tk):
 
     def _clear_editor(self):
         self.current_index = None
+        self.edit_original_hex.set(False)
 
-        self.original_text.configure(state=tk.NORMAL)
-        self.original_text.delete("1.0", tk.END)
-        self.original_text.configure(state=tk.DISABLED)
+        self.original_text.configure(
+            state=tk.NORMAL
+        )
+        self.original_text.delete(
+            "1.0",
+            tk.END,
+        )
+        self.original_text.configure(
+            state=tk.DISABLED
+        )
 
-        self.translation_text.delete("1.0", tk.END)
+        self.translation_text.delete(
+            "1.0",
+            tk.END,
+        )
+
         self._set_hidden_text("")
         self._update_hidden_summary()
 
     def _focus_search(self, event=None):
         self.search_entry.focus_set()
-        self.search_entry.selection_range(0, tk.END)
+        self.search_entry.selection_range(
+            0,
+            tk.END,
+        )
         return "break"
 
     def _on_close(self):
         if self.project:
+            if not self._save_original_hex_edit():
+                return
+
             answer = messagebox.askyesnocancel(
                 self.tr("exit"),
                 self.tr("save_before_exit"),
